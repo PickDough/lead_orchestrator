@@ -1,0 +1,17 @@
+# Visual Studio Code
+.vscode/
+.settings/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+/vendor/
+/Godeps/
+/.go/
+/bin/
