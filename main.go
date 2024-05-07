@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"leadOrchestrator/src/api"
+	"leadOrchestrator/src/service"
+	"leadOrchestrator/src/storage"
 	"log"
 
 	"github.com/caarlos0/env/v11"
@@ -21,16 +24,21 @@ type config struct {
 	Port               string `env:"PORT" envDefault:"3000"`
 }
 
+type App interface {
+}
+
 func main() {
 	cfg := readConfig()
 
-	_ = connectDb(cfg)
+	db := connectDb(cfg)
 
 	app := fiber.New()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+	storage := storage.NewStorage(db)
+
+	createClientService := service.NewCreateClientService(storage)
+	createClientHandler := api.NewCreateClientHandler(createClientService)
+	app.Post("/clients", createClientHandler.Create)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.Port))
 }
