@@ -1,19 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"leadOrchestrator/src/api"
-	"leadOrchestrator/src/service"
-	"leadOrchestrator/src/storage"
+	"leadOrchestrator/src/app"
+	"time"
+
 	"log"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/joho/godotenv"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -27,42 +24,22 @@ type config struct {
 type App interface {
 }
 
+var strategy = flag.String("ls", "ByPriorityAndMaxCapacity", "the strategy to use to assign leads")
+
 func main() {
+	flag.Parse()
+
 	cfg := readConfig()
 
-	db := connectDb(cfg)
-
-	app := fiber.New()
-
-	storage := storage.NewStorage(db)
-
-	createClientService := service.NewCreateClientService(storage)
-	createClientHandler := api.NewCreateClientHandler(createClientService)
-	app.Post("/clients", createClientHandler.Create)
+	app := app.NewApp(app.Config{
+		DbConnectionString: cfg.DbConnectionString,
+		MigrationsPath:     "migrations",
+		Port:               cfg.Port,
+		Strategy:           *strategy,
+		Now:                time.Now,
+	})
 
 	app.Listen(fmt.Sprintf(":%s", cfg.Port))
-}
-
-func connectDb(cfg config) *sqlx.DB {
-	db, err := sqlx.Connect("sqlite3", cfg.DbConnectionString)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	driver, err := sqlite.WithInstance(db.DB, &sqlite.Config{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
-		"leads", driver)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	m.Up()
-
-	return db
 }
 
 func readConfig() config {
