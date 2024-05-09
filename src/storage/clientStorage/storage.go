@@ -1,4 +1,4 @@
-package storage
+package clientStorage
 
 import "github.com/jmoiron/sqlx"
 

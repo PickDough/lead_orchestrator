@@ -1,7 +1,9 @@
-package api
+package createClient
 
 import (
+	"errors"
 	"leadOrchestrator/src/domain"
+	domainErrors "leadOrchestrator/src/domain/errors"
 	"leadOrchestrator/src/model"
 	"regexp"
 
@@ -45,12 +47,17 @@ func (cc *createClient) Create(c *fiber.Ctx) error {
 
 	client, err := cc.service.Create(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		var domainError *domainErrors.DomainError
+		if errors.As(err, &domainError) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		} else {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{})
+		}
 	}
 
 	displayClient := model.MapToDisplayClient(client)
 
-	return c.Status(fiber.StatusCreated).JSON(displayClient)
+	return c.Status(fiber.StatusOK).JSON(displayClient)
 }

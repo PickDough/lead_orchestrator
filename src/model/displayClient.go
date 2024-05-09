@@ -7,15 +7,14 @@ import (
 )
 
 type DisplayClient struct {
-	Id           int64
-	Name         string
-	WorkingHours string
-	LeadCapacity int
-	Priority     int
+	Id           int64  `json:"id"`
+	Name         string `json:"name"`
+	WorkingHours string `json:"workingHours"`
+	LeadCapacity int    `json:"leadCapacity"`
+	Priority     int    `json:"priority"`
 }
 
 func MapToDisplayClient(client *domain.Client) *DisplayClient {
-
 	return &DisplayClient{
 		Id:   client.Id,
 		Name: client.Name,

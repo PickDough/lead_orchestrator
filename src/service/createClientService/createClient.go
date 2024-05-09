@@ -1,16 +1,16 @@
-package service
+package createClientService
 
 import (
-	"errors"
 	"fmt"
 	"leadOrchestrator/src/domain"
+	"leadOrchestrator/src/domain/errors"
 	"leadOrchestrator/src/model"
 	"strings"
 	"time"
 )
 
 type saveClient interface {
-	SaveClient(client *domain.Client) (*domain.Client, error)
+	CreateClient(client *domain.Client) (*domain.Client, error)
 }
 
 type createClientService struct {
@@ -35,7 +35,7 @@ func (ccs *createClientService) Create(model *model.CreateClientModel) (*domain.
 	}
 
 	if d1 >= d2 {
-		return nil, errors.New("working hours end must be greater than working hours start")
+		return nil, &errors.WorkingHoursEndBeforeStartError{}
 	}
 
 	client := &domain.Client{
@@ -46,10 +46,9 @@ func (ccs *createClientService) Create(model *model.CreateClientModel) (*domain.
 		Priority:          model.Priority,
 	}
 
-	client, err = ccs.saveClient.SaveClient(client)
-	// TODO: add logging
+	client, err = ccs.saveClient.CreateClient(client)
 	if err != nil {
-		return nil, errors.New("failed to save client")
+		return nil, err
 	}
 
 	return client, nil
